@@ -1,26 +1,17 @@
 LATEXMK     := latexmk
 LATEX_FLAGS := -pdf -quiet
 
-PANDOC       := pandoc
-PANDOC_FLAGS := --from latex+raw_tex --lua-filter=config/tikz.lua
+PANDOC         := pandoc
+PANDOC_FLAGS   := --from latex+raw_tex
+PANDOC_FILTERS := ./misc/tikz.lua
 
-SRCDIR   := ./src
-PDFDIR   := ./pdfs
-DOCDIR   := ./docs
-BUILDDIR := ./build
+SRCDIR   = ./src
+PDFDIR   = ./pdfs
+DOCDIR   = ./docs
+BUILDDIR = ./build
 
 SRCFILES = $(wildcard ${SRCDIR}/*.tex)
 PDFFILES = $(SRCFILES:${SRCDIR}/%.tex=%.pdf)
-
-
-# Export TEXINPUTS for local latex style files
-# TEXINPUTS environment var is error prone. The current dir required.
-# BSTINPUTS environment var for bibtex .sty files
-# BIBINPUTS env var for .bib database
-export TEXINPUTS = :.:template/:
-export BSTINPUTS = :.:template/:
-export BIBINPUTS = :.:src/:
-
 
 # Generate *.pdf from ${SRCDIR}/*.tex and copy *.pdf to ${PDFDIR}
 all: ${PDFFILES}
@@ -54,18 +45,25 @@ all: ${PDFFILES}
 	@echo Making $@ from $?...
 
 	@mkdir -p ${BUILDDIR} ${DOCDIR}
-	$(PANDOC) ${PANDOC_FLAGS} -o ${DOCDIR}/$@ $?
+	$(PANDOC) ${PANDOC_FLAGS} --lua-filter=${PANDOC_FILTERS} -o ${DOCDIR}/$@ $?
 
 
 # Clean-ups
-clean:
-	@echo Clean up...
-	rm -fr ${BUILDDIR} ${PDFDIR} ${DOCDIR}
-
 clean-build:
 	@echo Clean up...
 	rm -fr ${BUILDDIR}
 
+clean-pdf:
+	@echo Clean up pdfs...
+	rm -fr ${PDFDIR}
 
-.PHONY: all clean clean-build
+clean-doc:
+	@echo Clean ip docs...
+	rm -fr ${DOCDIR}
+
+clean-all: clean-build clean-pdf clean-doc
+	@echo Clean up...
+
+
+.PHONY: all clean-all clean-build clean-doc clean-pdf
 # vim: ts=4:
